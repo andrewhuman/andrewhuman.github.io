@@ -26,13 +26,228 @@
    <title>Deep Learning Experience</title>
    <link href="http://localhost:3000/atom.xml" rel="self" type="application/atom+xml"/>
    <link href="http://localhost:3000" rel="alternate" type="text/html" />
-   <updated>2017-12-16T15:21:00+08:00</updated>
+   <updated>2017-12-16T21:09:23+08:00</updated>
    <id>http://localhost:3000</id>
    <author>
      <name></name>
      <email></email>
    </author>
 
+   
+   <entry>
+     <title>cnn卷积网络认为世界是什么样子的</title>
+     <link href="/cnn-work-principle-code-implement"/>
+     <updated>2016-05-01T00:00:00+08:00</updated>
+     <id>/cnn-work-principle-code-implement</id>
+     <content type="html">&lt;h2 id=&quot;前言&quot;&gt;前言&lt;/h2&gt;
+&lt;p&gt;在上一篇&lt;a href=&quot;https://andrewhuman.github.io/cnn-hidden-layout_search&quot;&gt;cnn卷积网络每一层是怎么工作的&lt;/a&gt;中我们看了cnn每一层在找什么，除此之外还有几张方法帮助我们更好理解网络，包括网络对图像的哪一部分反应更大,你训练出来的网络所认为的人或者其他是什么样子的等。&lt;br /&gt;本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看&lt;a href=&quot;http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf&quot;&gt;CS231N&lt;/a&gt;和git上的代码实现&lt;/p&gt;
+&lt;h2 id=&quot;网络模型&quot;&gt;网络模型&lt;/h2&gt;
+&lt;p&gt;网络模型使用&lt;a href=&quot;https://arxiv.org/pdf/1602.07360.pdf&quot;&gt;SqueezeNet&lt;/a&gt;,作者是UC Berkeley等人,它的架构如下图:
+&lt;img src=&quot;../images/squeestnet_architect.png&quot; alt=&quot;squeezenet&quot; /&gt;
+该模型只有AlexNet五十分之一的参数，却达到了同样的精度，最核心的改变是FireModule:
+&lt;img src=&quot;../images/squeestnet_fire_module.png&quot; alt=&quot;&quot; /&gt;
+其实就是把一层的卷积变成2层,第一层是1x1的卷积S11，之后是1x1和3x3卷积，记为e11和e33，最后把e11和e33拼接起来，python代码如下:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def fire_module(x,inp,sp,e11p,e33p):
+    with tf.variable_scope(&quot;fire&quot;):
+        with tf.variable_scope(&quot;squeeze&quot;):
+            W = tf.get_variable(&quot;weights&quot;,shape=[1,1,inp,sp])
+            b = tf.get_variable(&quot;bias&quot;,shape=[sp])
+            s = tf.nn.conv2d(x,W,[1,1,1,1],&quot;VALID&quot;)+b
+            s = tf.nn.relu(s)
+        with tf.variable_scope(&quot;e11&quot;):
+            W = tf.get_variable(&quot;weights&quot;,shape=[1,1,sp,e11p])
+            b = tf.get_variable(&quot;bias&quot;,shape=[e11p])
+            e11 = tf.nn.conv2d(s,W,[1,1,1,1],&quot;VALID&quot;)+b
+            e11 = tf.nn.relu(e11)
+        with tf.variable_scope(&quot;e33&quot;):
+            W = tf.get_variable(&quot;weights&quot;,shape=[3,3,sp,e33p])
+            b = tf.get_variable(&quot;bias&quot;,shape=[e33p])
+            e33 = tf.nn.conv2d(s,W,[1,1,1,1],&quot;SAME&quot;)+b
+            e33 = tf.nn.relu(e33)
+        return tf.concat([e11,e33],3)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;具体的其他细节可以直接点击查看论文.&lt;/p&gt;
+&lt;h2 id=&quot;1-准备工作&quot;&gt;1. 准备工作&lt;/h2&gt;
+&lt;h3 id=&quot;11-首先导入需要lib&quot;&gt;1.1 首先导入需要lib&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from __future__ import print_function
+import time, os, json
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+
+from cs231n.classifiers.squeezenet import SqueezeNet
+from cs231n.data_utils import load_tiny_imagenet
+from cs231n.image_utils import preprocess_image, deprocess_image
+from cs231n.image_utils import SQUEEZENET_MEAN, SQUEEZENET_STD
+
+%matplotlib inline
+plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
+plt.rcParams['image.interpolation'] = 'nearest'
+plt.rcParams['image.cmap'] = 'gray'
+
+def get_session():
+	&quot;&quot;&quot;Create a session that dynamically allocates memory.&quot;&quot;&quot;
+	config = tf.ConfigProto()
+	config.gpu_options.allow_growth = True
+	session = tf.Session(config=config)
+	return session
+
+%load_ext autoreload
+%autoreload 2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;12-下载训练好的squeezenet模型数据也就是weight导入模型&quot;&gt;1.2 下载训练好的squeezenet模型数据也就是&lt;a href=&quot;http://cs231n.stanford.edu/squeezenet_tf.zip&quot;&gt;weight&lt;/a&gt;,导入模型&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset_default_graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;SAVE_PATH&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'cs231n/datasets/squeezenet.ckpt'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SqueezeNet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;save_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SAVE_PATH&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;13-导入图片&quot;&gt;1.3 导入图片&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from cs231n.data_utils import load_imagenet_val
+X_raw, y, class_names = load_imagenet_val(num=5)
+
+plt.figure(figsize=(12, 6))
+for i in range(5):
+	plt.subplot(1, 5, i + 1)
+	plt.imshow(X_raw[i])
+	plt.title(class_names[y[i]])
+	plt.axis('off')
+plt.gcf().tight_layout()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/cnn_newwork_visualization_load_image.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;14-对图片做预处理图片像素值减去均值再除以方差&quot;&gt;1.4 对图片做预处理,图片像素值减去均值再除以方差&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;X = np.array([preprocess_image(img) for img in X_raw])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;2-saliency-maps&quot;&gt;2. &lt;a href=&quot;https://arxiv.org/pdf/1312.6034.pdf&quot;&gt;Saliency Maps&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;我们想知道图像的哪部分对分类任务的影响更大，更准确说是哪些像素对最后的score得分影响更大,方法是计算正确的得分相对于图像每个像素的梯度:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def compute_saliency_maps(X, y, model):
+	saliency = None
+	#计算输入图像的正确分类的得分
+	correct_scores = tf.gather_nd(model.classifier,
+                              tf.stack((tf.range(X.shape[0]), model.labels), axis=1))
+	#计算得分相对于图像每个像素的梯度值
+	grads = tf.gradients(correct_scores,model.image)
+	grads = grads[0]
+	#对梯度值取绝对值，便于观察
+	grads = tf.abs(grads)
+	#grads的shape=[H,W,3]，只取3个中的最大值，便于观察
+	grads = tf.reduce_max(grads,axis=3)
+	saliency = sess.run(grads,feed_dict={model.labels:y,model.image:X})
+return saliency
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;运行计算:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def show_saliency_maps(X, y, mask):
+mask = np.asarray(mask)
+Xm = X[mask]
+ym = y[mask]
+
+saliency = compute_saliency_maps(Xm, ym, model)
+
+for i in range(mask.size):
+    plt.subplot(2, mask.size, i + 1)
+    plt.imshow(deprocess_image(Xm[i]))
+    plt.axis('off')
+    plt.title(class_names[ym[i]])
+    plt.subplot(2, mask.size, mask.size + i + 1)
+    plt.title(mask[i])
+    plt.imshow(saliency[i], cmap=plt.cm.hot)
+    plt.axis('off')
+    plt.gcf().set_size_inches(10, 4)
+plt.show()
+
+mask = np.arange(5)
+show_saliency_maps(X, y, mask)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;结果如下:
+&lt;img src=&quot;../images/cnn_salicen_image_map.png&quot; alt=&quot;&quot; /&gt;
+颜色越亮表示对最终结果影响越大,可以看出鹌鹑的头部分，狗的头部和毛发，都对分类的最终影响很大&lt;/p&gt;
+
+&lt;h2 id=&quot;3-class-visualization卷积网络认为的物体是什么样的&quot;&gt;3. &lt;a href=&quot;https://arxiv.org/pdf/1312.6034.pdf&quot;&gt;Class visualization&lt;/a&gt;卷积网络认为的物体是什么样的&lt;/h2&gt;
+&lt;p&gt;我们知道输入一个图片后，在最后一层会给出分值，以此判断图片的分类。如果我们有一个图片，可以把某个分类的得分达到最高，就能观察到该网络所认为的理想的这个分类是什么样的,这是很有趣的尝试,而且能得出漂亮的结果.方法就是我们先随机初始化一个图片，然后与之前相反使用梯度增加的方法，让该图片最终可以最大化我们指定的一个分类,最终生成的图片就是我们要的结果，数学表示是:
+&lt;img src=&quot;../images/cnn_class_visible.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;31-定义模糊函数使用高斯滤波随机初始化图片&quot;&gt;3.1 定义模糊函数,使用高斯滤波随机初始化图片:&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from scipy.ndimage.filters import gaussian_filter1d
+def blur_image(X, sigma=1):
+	X = gaussian_filter1d(X, sigma, axis=1)
+	X = gaussian_filter1d(X, sigma, axis=2)
+	return X
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;32-生成最大化指定分类分值的图片&quot;&gt;3.2 生成最大化指定分类分值的图片:&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def create_class_visualization(target_y, model, **kwargs):
+	#从kwargs参数中取出我们需要的值
+	l2_reg = kwargs.pop('l2_reg', 1e-3) #l2正则化数值，默认1e-3
+	learning_rate = kwargs.pop('learning_rate', 25) #学习率 默认25
+	num_iterations = kwargs.pop('num_iterations', 200)#迭代次数，默认200
+	blur_every = kwargs.pop('blur_every', 10) #每10迭代后使用高斯模糊
+	max_jitter = kwargs.pop('max_jitter', 16) #最大抖动范围
+	show_every = kwargs.pop('show_every', 25) #每25次迭代后显示下图片
+	
+	#随机初始化图片
+	X = 255 * np.random.rand(224, 224, 3)
+	X = preprocess_image(X)[None]
+
+	#取出我们指定的正确分类
+	target_ph = model.classifier[:,target_y]
+	#正则化
+	regulation = l2_reg *tf.pow(tf.norm(model.image) ,2)
+	#计算损失,使用损失计算相应的梯度
+	loss = target_ph - regulation # scalar loss
+	grad = tf.gradients(loss,model.image)[0] # gradient of loss with respect to model.image, same size as model.image
+	#循环迭代
+  	for t in range(num_iterations):
+		#随机抖动图片，这样会让图片更平滑，结果更漂亮
+    	ox, oy = np.random.randint(-max_jitter, max_jitter+1, 2)
+    	Xi = X.copy()
+    	X = np.roll(np.roll(X, ox, 1), oy, 2)
+    
+    	#计算梯度，并使用梯度增加
+    	dgrad = sess.run(grad,feed_dict={model.image:X})
+   		X += dgrad
+    	#反向抖动图片
+    	X = np.roll(np.roll(X, -ox, 1), -oy, 2)
+		
+		#裁剪，并对图片做高斯模糊
+    	X = np.clip(X, -SQUEEZENET_MEAN/SQUEEZENET_STD, (1.0 - SQUEEZENET_MEAN)/SQUEEZENET_STD)
+    	if t % blur_every == 0:
+        	X = blur_image(X, sigma=0.5)
+		#显示图片效果
+    	if t == 0 or (t + 1) % show_every == 0 or t == num_iterations - 1:
+        	plt.imshow(deprocess_image(X[0]))
+        	class_name = class_names[target_y]
+        	plt.title('%s\nIteration %d / %d' % (class_name, t + 1, num_iterations))
+        	plt.gcf().set_size_inches(4, 4)
+        	plt.axis('off')
+        	plt.show()
+	return X
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;33-我们随便选择一个类别运行查看结果&quot;&gt;3.3 我们随便选择一个类别，运行查看结果:&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;target_y = np.random.randint(1000)
+X = create_class_visualization(target_y, model)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/cnn_class_visible_result1.png&quot; alt=&quot;&quot; /&gt;
+这是神经网络所认为的屋顶,可以看出屋顶的大概结构，但是跟现实的屋顶很显然不太一样，可以认为这是各种屋顶的概念的总和.
+&lt;img src=&quot;../images/cnn_class_visible_result_tarantula.png&quot; alt=&quot;&quot; /&gt;
+狼蛛，仍然是所有trainset中狼蛛图片的概念总和.&lt;/p&gt;
+
+&lt;h2 id=&quot;4-总结&quot;&gt;4. 总结&lt;/h2&gt;
+&lt;p&gt;还有一些方法，例如对输入图片进行部分遮挡以观察最后一层得分变化，fooling image，feature inversion等，都可以让我们进一步理解我们训练好的神经网络到底在做什么，具有什么性质；而且利用这些方法可以生成有趣的图片，比如deepDream,style transfer等。&lt;br /&gt;更重要的是这些方法告诉我们神经网络不是不可解释，不是神秘的,虽然现在还没有严格的数学证明，但是它的理论基础是完善的，或者说可控的.&lt;br /&gt;除此之外，理解这些中间层，对我们设计网络架构是非常有帮助的，我会在下一篇文章中进行阐述.&lt;/p&gt;
+</content>
+   </entry>
    
    <entry>
      <title>『 Spark 』8. 实战案例 ｜ Spark 在金融领域的应用 ｜ 日内走势预测</title>
@@ -280,12 +495,12 @@ Tips: 如果插图看起来不明显，可以：1. 放大网页；2. 新标签�
    </entry>
    
    <entry>
-     <title>cnn卷积网络每一层是怎么工作的</title>
+     <title>cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么</title>
      <link href="/cnn-hidden-layout_search"/>
      <updated>2016-04-01T00:00:00+08:00</updated>
      <id>/cnn-hidden-layout_search</id>
      <content type="html">&lt;h2 id=&quot;前言&quot;&gt;前言&lt;/h2&gt;
-&lt;p&gt;虽然神经网络近年来取得了巨大的成功,但神经网络的隐藏层却一直被视为”黑盒”一样的存在,这造成了外界对神经网络的各种误解,所以近两年学界对隐藏层的探索做了大量的工作。对于cnn卷积网络而言,从2013年的&lt;a href=&quot;https://arxiv.org/pdf/1311.2901.pdf&quot;&gt;Visualizing and Understanding Convolutional Networks&lt;/a&gt;开始，人们对卷积网络的可视化和理解进行了很多实验，开发了很多工具。而作为机器学习工程师，只有理解了隐藏层的作用才能更好的进行网络架构的设计&lt;/p&gt;
+&lt;p&gt;虽然神经网络近年来取得了巨大的成功,但神经网络的中间层却一直被视为”黑盒”一样的存在,这造成了外界对神经网络的各种误解,所以近两年学界对中间层的探索做了大量的工作。对于cnn卷积网络而言,从2013年的&lt;a href=&quot;https://arxiv.org/pdf/1311.2901.pdf&quot;&gt;Visualizing and Understanding Convolutional Networks&lt;/a&gt;开始，人们对卷积网络的可视化和理解进行了很多实验，开发了很多工具。而作为机器学习工程师，只有理解了中间层的作用才能更好的进行网络架构的设计&lt;/p&gt;
 &lt;h2 id=&quot;1-cnn卷积层可视化&quot;&gt;1. CNN卷积层可视化&lt;/h2&gt;
 &lt;p&gt;本部分内容参考Zeiler 和 Fergus的&lt;a href=&quot;https://arxiv.org/pdf/1311.2901.pdf&quot;&gt;论文&lt;/a&gt;和&lt;a href=&quot;http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf&quot;&gt;CS231N&lt;/a&gt;内容&lt;/p&gt;
 
@@ -325,7 +540,7 @@ Tips: 如果插图看起来不明显，可以：1. 放大网页；2. 新标签�
 &lt;h2 id=&quot;2-last-layer&quot;&gt;2. last layer&lt;/h2&gt;
 &lt;p&gt;对于最后一层，也就是分类层也无法直接对weight进行观察的，不过可以通过降维的方法比如PCA或t-SNE，把它映射到2维平面上,如下图所示:
 &lt;img src=&quot;../images/cnn_final_layout_pca.png&quot; alt=&quot;&quot; /&gt;
-该图片是对0-9数字的分类任务的最后一层的映射，我们把大量的图片输入网络，然后在最后一层得到28*28的高维特征，可以很明显的看到同类的特征会自动聚集到一起，而类与类之间会分离,也就是分类任务已经完成&lt;/p&gt;
+该图片是对0-9数字的分类任务的最后一层的映射，我们把大量的图片输入网络，在最后一层得到28*28的高维特征，然后降维到2维平面.可以很明显的看到同类的特征会自动聚集到一起，而类与类之间会分离,也就是分类任务已经完成&lt;/p&gt;
 
 &lt;h2 id=&quot;3-总结&quot;&gt;3. 总结&lt;/h2&gt;
 &lt;p&gt;这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛时，cnn每一层的filter会不断调整自己，直到它具有上述能力。&lt;br /&gt;从这里我们也可以想象出过拟合的现象，那就是若过拟合则每层的激活对训练集来说更精准，但适应性也更差.&lt;br /&gt;这是对网络单层的探索，为了解开黑盒，还有很多其他的方法，在下一篇文章中会用实际代码展示这些方法.&lt;/p&gt;

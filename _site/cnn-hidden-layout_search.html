@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>cnn卷积网络每一层是怎么工作的 | Deep Learning Experience</title>
+  <title>cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么 | Deep Learning Experience</title>
   <meta name="renderer" content="webkit">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,7 +40,7 @@
   </div>
 
   <div class="entry" style="position: relative;">
-    <h1 class="entry-title"><a href="/cnn-hidden-layout_search" title="cnn卷积网络每一层是怎么工作的">cnn卷积网络每一层是怎么工作的</a></h1>
+    <h1 class="entry-title"><a href="/cnn-hidden-layout_search" title="cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么">cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么</a></h1>
 
     <p class="entry-date">2016-04-01 
         <span class="lastModified" style="display: none;" data-source="_posts/python/2016-04-01-cnn-hidden-layout_search.md">最后更新时间: 
@@ -49,7 +49,7 @@
 
 
     <h2 id="前言">前言</h2>
-<p>虽然神经网络近年来取得了巨大的成功,但神经网络的隐藏层却一直被视为”黑盒”一样的存在,这造成了外界对神经网络的各种误解,所以近两年学界对隐藏层的探索做了大量的工作。对于cnn卷积网络而言,从2013年的<a href="https://arxiv.org/pdf/1311.2901.pdf">Visualizing and Understanding Convolutional Networks</a>开始，人们对卷积网络的可视化和理解进行了很多实验，开发了很多工具。而作为机器学习工程师，只有理解了隐藏层的作用才能更好的进行网络架构的设计</p>
+<p>虽然神经网络近年来取得了巨大的成功,但神经网络的中间层却一直被视为”黑盒”一样的存在,这造成了外界对神经网络的各种误解,所以近两年学界对中间层的探索做了大量的工作。对于cnn卷积网络而言,从2013年的<a href="https://arxiv.org/pdf/1311.2901.pdf">Visualizing and Understanding Convolutional Networks</a>开始，人们对卷积网络的可视化和理解进行了很多实验，开发了很多工具。而作为机器学习工程师，只有理解了中间层的作用才能更好的进行网络架构的设计</p>
 <h2 id="1-cnn卷积层可视化">1. CNN卷积层可视化</h2>
 <p>本部分内容参考Zeiler 和 Fergus的<a href="https://arxiv.org/pdf/1311.2901.pdf">论文</a>和<a href="http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf">CS231N</a>内容</p>
 
@@ -89,7 +89,7 @@
 <h2 id="2-last-layer">2. last layer</h2>
 <p>对于最后一层，也就是分类层也无法直接对weight进行观察的，不过可以通过降维的方法比如PCA或t-SNE，把它映射到2维平面上,如下图所示:
 <img src="../images/cnn_final_layout_pca.png" alt="" />
-该图片是对0-9数字的分类任务的最后一层的映射，我们把大量的图片输入网络，然后在最后一层得到28*28的高维特征，可以很明显的看到同类的特征会自动聚集到一起，而类与类之间会分离,也就是分类任务已经完成</p>
+该图片是对0-9数字的分类任务的最后一层的映射，我们把大量的图片输入网络，在最后一层得到28*28的高维特征，然后降维到2维平面.可以很明显的看到同类的特征会自动聚集到一起，而类与类之间会分离,也就是分类任务已经完成</p>
 
 <h2 id="3-总结">3. 总结</h2>
 <p>这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛时，cnn每一层的filter会不断调整自己，直到它具有上述能力。<br />从这里我们也可以想象出过拟合的现象，那就是若过拟合则每层的激活对训练集来说更精准，但适应性也更差.<br />这是对网络单层的探索，为了解开黑盒，还有很多其他的方法，在下一篇文章中会用实际代码展示这些方法.</p>
