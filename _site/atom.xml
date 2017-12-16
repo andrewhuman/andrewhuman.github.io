@@ -26,7 +26,7 @@
    <title>Deep Learning Experience</title>
    <link href="http://localhost:3000/atom.xml" rel="self" type="application/atom+xml"/>
    <link href="http://localhost:3000" rel="alternate" type="text/html" />
-   <updated>2017-12-15T17:06:31+08:00</updated>
+   <updated>2017-12-16T15:21:00+08:00</updated>
    <id>http://localhost:3000</id>
    <author>
      <name></name>
@@ -280,20 +280,26 @@ Tips: 如果插图看起来不明显，可以：1. 放大网页；2. 新标签�
    </entry>
    
    <entry>
-     <title>cnn卷积网络到底在找什么</title>
+     <title>cnn卷积网络每一层是怎么工作的</title>
      <link href="/cnn-hidden-layout_search"/>
      <updated>2016-04-01T00:00:00+08:00</updated>
      <id>/cnn-hidden-layout_search</id>
      <content type="html">&lt;h2 id=&quot;前言&quot;&gt;前言&lt;/h2&gt;
-&lt;p&gt;虽然神经网络近年来取得了巨大的成功,但神经网络的隐藏层却一直被视为”黑盒”一样的存在,这造成了外界对神经网络的各种误解,所以近两年学界对隐藏层的探索做了大量的工作。对于cnn卷积网络而言,从2013年的&lt;a href=&quot;https://arxiv.org/pdf/1311.2901.pdf&quot;&gt;Visualizing and Understanding Convolutional Networks&lt;/a&gt;开始，人们对卷积网络的可视化和理解进行了很多实验，开发了很多工具。而作为机器学习工程师，只有理解了隐藏层的作用才能更好的设计网络的架构。&lt;/p&gt;
+&lt;p&gt;虽然神经网络近年来取得了巨大的成功,但神经网络的隐藏层却一直被视为”黑盒”一样的存在,这造成了外界对神经网络的各种误解,所以近两年学界对隐藏层的探索做了大量的工作。对于cnn卷积网络而言,从2013年的&lt;a href=&quot;https://arxiv.org/pdf/1311.2901.pdf&quot;&gt;Visualizing and Understanding Convolutional Networks&lt;/a&gt;开始，人们对卷积网络的可视化和理解进行了很多实验，开发了很多工具。而作为机器学习工程师，只有理解了隐藏层的作用才能更好的进行网络架构的设计&lt;/p&gt;
 &lt;h2 id=&quot;1-cnn卷积层可视化&quot;&gt;1. CNN卷积层可视化&lt;/h2&gt;
 &lt;p&gt;本部分内容参考Zeiler 和 Fergus的&lt;a href=&quot;https://arxiv.org/pdf/1311.2901.pdf&quot;&gt;论文&lt;/a&gt;和&lt;a href=&quot;http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf&quot;&gt;CS231N&lt;/a&gt;内容&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;../images/cnn_first_layout_alexnet_2014.png&quot; alt=&quot;AlexNet&quot; /&gt;
-上图是ALexNet的第一层原生weight(96x55x55)的直接可视化，每一个单元格都代表了一个卷积核(55x55)，可以从上图中看出每一个卷积核都在寻找一个小的简单的结构,包括不同角度的线，不通位置的圆和不同的色块等等&lt;/p&gt;
+上图是ALexNet的第一层原生weight(96x55x55)的直接可视化，每一个单元格都代表了一个卷积核(55x55)，可以从上图中看出每一个卷积核都在寻找一个小的简单结构,包括不同角度的线，不同大小的圆和不同的色块等等.我们也可以直接把第二三四等层的卷积核如上图一样直接可视化,但是这些高层的原生weight或者filter是难以理解和解释的.&lt;/p&gt;
 
-&lt;p&gt;我们也可以直接把第二三四等层的卷积核如上图一样直接可视化,但是这些原生的weight或者filter是难以理解和解释的,因此人们想出了很多方法通过其他途径去观察这些隐藏层,最简单的做法就是让不同的图片通过一个训练好的模型的卷积层，观察其变化,以此探索这些卷积层在寻找什么.有一个类似该方法的交互性的工作，&lt;a href=&quot;https://www.youtube.com/watch?v=AgkfIQ4IGaM&quot;&gt;视频&lt;/a&gt;和&lt;a href=&quot;http://yosinski.com/deepvis&quot;&gt;网址&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;既然原生的filter难以理解，我们必须用其他方法,Deconv approaches让不同的图片通过一个训练好的模型的卷积层，观察其变化,以此探索这些卷积层在寻找什么.它的原理如下：
+&lt;img src=&quot;../images/cnn_deconv_approach.png&quot; alt=&quot;&quot; /&gt;
+我们输入一张图片，让它通过网络直到我们想观察的那一层，然后把该层我们想观察的神经元的梯度置为1，其他神经元的梯度置为0，然后从该层开始反向传播，但是在反向传播的过程中有两种方法要做不同改变：&lt;/p&gt;
+&lt;h4 id=&quot;1-backword-deconvnet方法把反向传播中的所有梯度小于0全置为0如图红框中所示&quot;&gt;1 backword deconvnet方法把反向传播中的所有梯度小于0，全置为0，如图红框中所示&lt;/h4&gt;
+&lt;h4 id=&quot;2-guided-backpropagatin方法除了把反向传播中梯度小于0的置为0外还把前向传播中小于0的单元也置为0&quot;&gt;2 guided backpropagatin方法除了把反向传播中梯度小于0的置为0外，还把前向传播中小于0的单元也置为0&lt;/h4&gt;
+&lt;p&gt;这样做的原因是反向传播中负的部分会对我们想得到的图片产生消极影响，从而使图片难以理解，只保留正的部分可以使图片容易观察.&lt;/p&gt;
 
+&lt;p&gt;下面的图片采用的是backword deconvnet方法得到的，可以看到也可以取得不错的效果.&lt;/p&gt;
 &lt;h3 id=&quot;11-layer1&quot;&gt;1.1 layer1&lt;/h3&gt;
 &lt;p&gt;&lt;img src=&quot;../images/cnn_first_layout_zeiler.png&quot; alt=&quot;&quot; /&gt;
 上图的每个格子同样代表一个卷积核,对于第一行第一列的格子可以粗略看出一条-45度直线,事实上这个格子的卷积核寻找的正是-45度左右的线条，它会对如下图片产生激活反应:
@@ -315,11 +321,14 @@ Tips: 如果插图看起来不明显，可以：1. 放大网页；2. 新标签�
 &lt;p&gt;&lt;img src=&quot;../images/cnn_fifth_layout_filter_activation.png&quot; alt=&quot;&quot; /&gt;
 第五层，我们得到一些更高层次的抽象，比如右边第8行4列穿红衣服的女人，输出的是人脸部分，因为对于分类来说，神经网络使用人脸来区分图像是不是表示一个人,所以它只关心人脸部分&lt;/p&gt;
 
-&lt;p&gt;而这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛之后，cnn会自动&lt;/p&gt;
+&lt;p&gt;有一个类似的交互性的工作，&lt;a href=&quot;https://www.youtube.com/watch?v=AgkfIQ4IGaM&quot;&gt;视频&lt;/a&gt;和&lt;a href=&quot;http://yosinski.com/deepvis&quot;&gt;网址&lt;/a&gt;,可以实时的看到网络每一层对输入的反应.&lt;/p&gt;
+&lt;h2 id=&quot;2-last-layer&quot;&gt;2. last layer&lt;/h2&gt;
+&lt;p&gt;对于最后一层，也就是分类层也无法直接对weight进行观察的，不过可以通过降维的方法比如PCA或t-SNE，把它映射到2维平面上,如下图所示:
+&lt;img src=&quot;../images/cnn_final_layout_pca.png&quot; alt=&quot;&quot; /&gt;
+该图片是对0-9数字的分类任务的最后一层的映射，我们把大量的图片输入网络，然后在最后一层得到28*28的高维特征，可以很明显的看到同类的特征会自动聚集到一起，而类与类之间会分离,也就是分类任务已经完成&lt;/p&gt;
 
-&lt;h2 id=&quot;2&quot;&gt;2.&lt;/h2&gt;
-
-&lt;h2 id=&quot;3&quot;&gt;3.&lt;/h2&gt;
+&lt;h2 id=&quot;3-总结&quot;&gt;3. 总结&lt;/h2&gt;
+&lt;p&gt;这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛时，cnn每一层的filter会不断调整自己，直到它具有上述能力。&lt;br /&gt;从这里我们也可以想象出过拟合的现象，那就是若过拟合则每层的激活对训练集来说更精准，但适应性也更差.&lt;br /&gt;这是对网络单层的探索，为了解开黑盒，还有很多其他的方法，在下一篇文章中会用实际代码展示这些方法.&lt;/p&gt;
 
 </content>
    </entry>
