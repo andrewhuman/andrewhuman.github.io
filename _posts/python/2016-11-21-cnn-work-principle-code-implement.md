@@ -1,12 +1,12 @@
 ---
 published: true
 layout: post
-title: cnn卷积网络可视化与理解(2)—cnn卷积网络认为世界是什么样子的
+title: cnn可视化与理解(2)—cnn网络认为世界是什么样子的
 description: 神经网络工作原理探索
 ---
 
 ## 前言
-在上一篇[cnn卷积网络每一层是怎么工作的](https://andrewhuman.github.io/cnn-hidden-layout_search)中我们看了cnn每一层在找什么，除此之外还有几张方法帮助我们更好理解网络，包括网络对图像的哪一部分反应更大,你训练出来的网络所认为的人或者其他是什么样子的等。<br>本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看[CS231N](http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf)和git上的代码实现
+在上一篇[cnn卷积网络每一层是怎么工作的](https://andrewhuman.github.io/cnn-hidden-layout_search)中我们看了cnn每一层在找什么，除此之外还有几种方法可以帮助我们更好的理解网络，包括网络对图像的哪部分更敏感,你训练出来的网络所认为的人或者其他事物是什么样子的等。<br>本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看[CS231N](http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf)和git上的代码实现
 ## 网络模型
 网络模型使用[SqueezeNet](https://arxiv.org/pdf/1602.07360.pdf),作者是UC Berkeley等人,它的架构如下图:
 ![squeezenet](../images/squeestnet_architect.png)

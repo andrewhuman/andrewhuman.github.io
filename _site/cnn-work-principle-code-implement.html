@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>cnn卷积网络可视化与理解(2)—cnn卷积网络认为世界是什么样子的 | Deep Learning Experience</title>
+  <title>cnn可视化与理解(2)—cnn网络认为世界是什么样子的 | Deep Learning Experience</title>
   <meta name="renderer" content="webkit">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,16 +40,16 @@
   </div>
 
   <div class="entry" style="position: relative;">
-    <h1 class="entry-title"><a href="/cnn-work-principle-code-implement" title="cnn卷积网络可视化与理解(2)—cnn卷积网络认为世界是什么样子的">cnn卷积网络可视化与理解(2)—cnn卷积网络认为世界是什么样子的</a></h1>
+    <h1 class="entry-title"><a href="/cnn-work-principle-code-implement" title="cnn可视化与理解(2)—cnn网络认为世界是什么样子的">cnn可视化与理解(2)—cnn网络认为世界是什么样子的</a></h1>
 
-    <p class="entry-date">2016-11-01 
-        <span class="lastModified" style="display: none;" data-source="_posts/python/2016-11-01-cnn-work-principle-code-implement.md">最后更新时间: 
+    <p class="entry-date">2016-11-21 
+        <span class="lastModified" style="display: none;" data-source="_posts/python/2016-11-21-cnn-work-principle-code-implement.md">最后更新时间: 
         </span>
     </p>
 
 
     <h2 id="前言">前言</h2>
-<p>在上一篇<a href="https://andrewhuman.github.io/cnn-hidden-layout_search">cnn卷积网络每一层是怎么工作的</a>中我们看了cnn每一层在找什么，除此之外还有几张方法帮助我们更好理解网络，包括网络对图像的哪一部分反应更大,你训练出来的网络所认为的人或者其他是什么样子的等。<br />本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看<a href="http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf">CS231N</a>和git上的代码实现</p>
+<p>在上一篇<a href="https://andrewhuman.github.io/cnn-hidden-layout_search">cnn卷积网络每一层是怎么工作的</a>中我们看了cnn每一层在找什么，除此之外还有几种方法可以帮助我们更好的理解网络，包括网络对图像的哪部分更敏感,你训练出来的网络所认为的人或者其他事物是什么样子的等。<br />本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看<a href="http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf">CS231N</a>和git上的代码实现</p>
 <h2 id="网络模型">网络模型</h2>
 <p>网络模型使用<a href="https://arxiv.org/pdf/1602.07360.pdf">SqueezeNet</a>,作者是UC Berkeley等人,它的架构如下图:
 <img src="../images/squeestnet_architect.png" alt="squeezenet" />

@@ -26,7 +26,7 @@
    <title>Deep Learning Experience</title>
    <link href="http://localhost:3000/atom.xml" rel="self" type="application/atom+xml"/>
    <link href="http://localhost:3000" rel="alternate" type="text/html" />
-   <updated>2017-12-17T23:27:12+08:00</updated>
+   <updated>2017-12-17T23:38:01+08:00</updated>
    <id>http://localhost:3000</id>
    <author>
      <name></name>
@@ -35,12 +35,12 @@
 
    
    <entry>
-     <title>cnn卷积网络可视化与理解(2)—cnn卷积网络认为世界是什么样子的</title>
+     <title>cnn可视化与理解(2)—cnn网络认为世界是什么样子的</title>
      <link href="/cnn-work-principle-code-implement"/>
-     <updated>2016-11-01T00:00:00+08:00</updated>
+     <updated>2016-11-21T00:00:00+08:00</updated>
      <id>/cnn-work-principle-code-implement</id>
      <content type="html">&lt;h2 id=&quot;前言&quot;&gt;前言&lt;/h2&gt;
-&lt;p&gt;在上一篇&lt;a href=&quot;https://andrewhuman.github.io/cnn-hidden-layout_search&quot;&gt;cnn卷积网络每一层是怎么工作的&lt;/a&gt;中我们看了cnn每一层在找什么，除此之外还有几张方法帮助我们更好理解网络，包括网络对图像的哪一部分反应更大,你训练出来的网络所认为的人或者其他是什么样子的等。&lt;br /&gt;本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看&lt;a href=&quot;http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf&quot;&gt;CS231N&lt;/a&gt;和git上的代码实现&lt;/p&gt;
+&lt;p&gt;在上一篇&lt;a href=&quot;https://andrewhuman.github.io/cnn-hidden-layout_search&quot;&gt;cnn卷积网络每一层是怎么工作的&lt;/a&gt;中我们看了cnn每一层在找什么，除此之外还有几种方法可以帮助我们更好的理解网络，包括网络对图像的哪部分更敏感,你训练出来的网络所认为的人或者其他事物是什么样子的等。&lt;br /&gt;本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看&lt;a href=&quot;http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf&quot;&gt;CS231N&lt;/a&gt;和git上的代码实现&lt;/p&gt;
 &lt;h2 id=&quot;网络模型&quot;&gt;网络模型&lt;/h2&gt;
 &lt;p&gt;网络模型使用&lt;a href=&quot;https://arxiv.org/pdf/1602.07360.pdf&quot;&gt;SqueezeNet&lt;/a&gt;,作者是UC Berkeley等人,它的架构如下图:
 &lt;img src=&quot;../images/squeestnet_architect.png&quot; alt=&quot;squeezenet&quot; /&gt;
@@ -250,7 +250,7 @@ X = create_class_visualization(target_y, model)
    </entry>
    
    <entry>
-     <title>cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么</title>
+     <title>cnn可视化与理解(1)—cnn每一层在找什么</title>
      <link href="/cnn-hidden-layout_search"/>
      <updated>2016-11-01T00:00:00+08:00</updated>
      <id>/cnn-hidden-layout_search</id>
@@ -264,7 +264,7 @@ X = create_class_visualization(target_y, model)
 
 &lt;p&gt;既然原生的filter难以理解，我们必须绕道去观察,其中Deconv approaches让不同的图片通过一个训练好的模型的卷积层，观察其变化,以此探索这些卷积层在寻找什么.它的原理如下：
 &lt;img src=&quot;../images/cnn_deconv_approach.png&quot; alt=&quot;&quot; /&gt;
-我们输入一张图片，让它通过网络直到我们想观察的那一层，然后把该层我们想观察的神经元的梯度置为1，其他神经元的梯度置为0，从该层开始反向传播，但是在反向传播的要做出一点改变：&lt;/p&gt;
+我们输入一张图片，让它通过网络直到我们想观察的那一层，然后把该层我们想观察的神经元的梯度置为1，其他神经元的梯度置为0，从该层开始反向传播，但是在反向传播时要做出一点改变：&lt;/p&gt;
 &lt;h4 id=&quot;1-backword-deconvnet方法把反向传播中的所有梯度小于0的全置为0如图红框中所示&quot;&gt;1 backword deconvnet方法把反向传播中的所有梯度小于0的，全置为0，如图红框中所示&lt;/h4&gt;
 &lt;h4 id=&quot;2-guided-backpropagatin方法除了把反向传播中梯度小于0的置为0外还把前向传播中小于0的单元也置为0事实上这种方法产生的效果要更好一点&quot;&gt;2 guided backpropagatin方法除了把反向传播中梯度小于0的置为0外，还把前向传播中小于0的单元也置为0,事实上这种方法产生的效果要更好一点&lt;/h4&gt;
 &lt;p&gt;这样做的原因是反向传播中负的部分会对我们想得到的图片产生消极影响，从而使图片难以理解，只保留正的部分可以使图片容易观察.&lt;/p&gt;
@@ -298,7 +298,7 @@ X = create_class_visualization(target_y, model)
 该图片是对0-9数字的分类任务的最后一层的映射，我们把大量的图片输入网络，在最后一层得到28*28的高维特征，然后降维到2维平面.可以很明显的看到同类的特征会自动聚集到一起，而类与类之间会分离,也就是分类任务已经完成&lt;/p&gt;
 
 &lt;h2 id=&quot;3-总结&quot;&gt;3. 总结&lt;/h2&gt;
-&lt;p&gt;这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛时，cnn每一层的filter会不断调整自己，直到它具有上述能力。&lt;br /&gt;从这里我们也可以想象出过拟合的现象，那就是若过拟合则每层的激活对训练集来说更精准，但适应性也更差.&lt;br /&gt;这是对网络单层的探索，为了解开黑盒，还有很多其他的方法，在下一篇文章中会用实际代码展示这些方法.&lt;/p&gt;
+&lt;p&gt;这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛时，cnn每一层的filter会不断调整自己，直到它具有上述能力。&lt;br /&gt;从这里我们也可以想象出过拟合的现象，那就是若过拟合则每层的激活对训练集来说更精准，但适应性也更差.&lt;br /&gt;这是对网络单层的探索，为了解开黑盒，还有很多其他的方法，在&lt;a href=&quot;https://andrewhuman.github.io/cnn-work-principle-code-implement&quot;&gt;下一篇文章&lt;/a&gt;中会用实际代码展示这些方法.&lt;/p&gt;
 
 </content>
    </entry>

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么 | Deep Learning Experience</title>
+  <title>cnn可视化与理解(1)—cnn每一层在找什么 | Deep Learning Experience</title>
   <meta name="renderer" content="webkit">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,7 +40,7 @@
   </div>
 
   <div class="entry" style="position: relative;">
-    <h1 class="entry-title"><a href="/cnn-hidden-layout_search" title="cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么">cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么</a></h1>
+    <h1 class="entry-title"><a href="/cnn-hidden-layout_search" title="cnn可视化与理解(1)—cnn每一层在找什么">cnn可视化与理解(1)—cnn每一层在找什么</a></h1>
 
     <p class="entry-date">2016-11-01 
         <span class="lastModified" style="display: none;" data-source="_posts/python/2016-11-01-cnn-hidden-layout_search.md">最后更新时间: 
@@ -58,7 +58,7 @@
 
 <p>既然原生的filter难以理解，我们必须绕道去观察,其中Deconv approaches让不同的图片通过一个训练好的模型的卷积层，观察其变化,以此探索这些卷积层在寻找什么.它的原理如下：
 <img src="../images/cnn_deconv_approach.png" alt="" />
-我们输入一张图片，让它通过网络直到我们想观察的那一层，然后把该层我们想观察的神经元的梯度置为1，其他神经元的梯度置为0，从该层开始反向传播，但是在反向传播的要做出一点改变：</p>
+我们输入一张图片，让它通过网络直到我们想观察的那一层，然后把该层我们想观察的神经元的梯度置为1，其他神经元的梯度置为0，从该层开始反向传播，但是在反向传播时要做出一点改变：</p>
 <h4 id="1-backword-deconvnet方法把反向传播中的所有梯度小于0的全置为0如图红框中所示">1 backword deconvnet方法把反向传播中的所有梯度小于0的，全置为0，如图红框中所示</h4>
 <h4 id="2-guided-backpropagatin方法除了把反向传播中梯度小于0的置为0外还把前向传播中小于0的单元也置为0事实上这种方法产生的效果要更好一点">2 guided backpropagatin方法除了把反向传播中梯度小于0的置为0外，还把前向传播中小于0的单元也置为0,事实上这种方法产生的效果要更好一点</h4>
 <p>这样做的原因是反向传播中负的部分会对我们想得到的图片产生消极影响，从而使图片难以理解，只保留正的部分可以使图片容易观察.</p>
@@ -92,7 +92,7 @@
 该图片是对0-9数字的分类任务的最后一层的映射，我们把大量的图片输入网络，在最后一层得到28*28的高维特征，然后降维到2维平面.可以很明显的看到同类的特征会自动聚集到一起，而类与类之间会分离,也就是分类任务已经完成</p>
 
 <h2 id="3-总结">3. 总结</h2>
-<p>这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛时，cnn每一层的filter会不断调整自己，直到它具有上述能力。<br />从这里我们也可以想象出过拟合的现象，那就是若过拟合则每层的激活对训练集来说更精准，但适应性也更差.<br />这是对网络单层的探索，为了解开黑盒，还有很多其他的方法，在下一篇文章中会用实际代码展示这些方法.</p>
+<p>这些激活是CNN自己学会的，或者说当我们定义相应loss函数,并用反向传播倒逼其收敛时，cnn每一层的filter会不断调整自己，直到它具有上述能力。<br />从这里我们也可以想象出过拟合的现象，那就是若过拟合则每层的激活对训练集来说更精准，但适应性也更差.<br />这是对网络单层的探索，为了解开黑盒，还有很多其他的方法，在<a href="https://andrewhuman.github.io/cnn-work-principle-code-implement">下一篇文章</a>中会用实际代码展示这些方法.</p>
 
 
 
