@@ -26,7 +26,7 @@
    <title>Deep Learning Experience</title>
    <link href="http://localhost:3000/atom.xml" rel="self" type="application/atom+xml"/>
    <link href="http://localhost:3000" rel="alternate" type="text/html" />
-   <updated>2017-12-17T23:38:01+08:00</updated>
+   <updated>2017-12-18T00:01:23+08:00</updated>
    <id>http://localhost:3000</id>
    <author>
      <name></name>
@@ -40,7 +40,7 @@
      <updated>2016-11-21T00:00:00+08:00</updated>
      <id>/cnn-work-principle-code-implement</id>
      <content type="html">&lt;h2 id=&quot;前言&quot;&gt;前言&lt;/h2&gt;
-&lt;p&gt;在上一篇&lt;a href=&quot;https://andrewhuman.github.io/cnn-hidden-layout_search&quot;&gt;cnn卷积网络每一层是怎么工作的&lt;/a&gt;中我们看了cnn每一层在找什么，除此之外还有几种方法可以帮助我们更好的理解网络，包括网络对图像的哪部分更敏感,你训练出来的网络所认为的人或者其他事物是什么样子的等。&lt;br /&gt;本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看&lt;a href=&quot;http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf&quot;&gt;CS231N&lt;/a&gt;和git上的代码实现&lt;/p&gt;
+&lt;p&gt;在上一篇&lt;a href=&quot;https://andrewhuman.github.io/cnn-hidden-layout_search&quot;&gt;cnn卷积网络每一层是怎么工作的&lt;/a&gt;中我们看了cnn每一层在找什么，除此之外还有几种方法可以帮助我们更好的理解网络，包括网络对图像的哪部分更敏感,你训练出来的网络所认为的人或者其他事物是什么样子的等。&lt;br /&gt;本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以查看&lt;a href=&quot;http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf&quot;&gt;CS231N&lt;/a&gt;和git上的代码实现&lt;/p&gt;
 &lt;h2 id=&quot;网络模型&quot;&gt;网络模型&lt;/h2&gt;
 &lt;p&gt;网络模型使用&lt;a href=&quot;https://arxiv.org/pdf/1602.07360.pdf&quot;&gt;SqueezeNet&lt;/a&gt;,作者是UC Berkeley等人,它的架构如下图:
 &lt;img src=&quot;../images/squeestnet_architect.png&quot; alt=&quot;squeezenet&quot; /&gt;
@@ -70,7 +70,7 @@
 
 &lt;p&gt;具体的其他细节可以直接点击查看论文.&lt;/p&gt;
 &lt;h2 id=&quot;1-准备工作&quot;&gt;1. 准备工作&lt;/h2&gt;
-&lt;h3 id=&quot;11-首先导入需要lib&quot;&gt;1.1 首先导入需要lib&lt;/h3&gt;
+&lt;h3 id=&quot;11-首先导入需要的lib&quot;&gt;1.1 首先导入需要的lib&lt;/h3&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from __future__ import print_function
 import time, os, json
 import numpy as np
@@ -145,7 +145,7 @@ plt.gcf().tight_layout()
 return saliency
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;运行计算:&lt;/p&gt;
+&lt;p&gt;运行查看结果:&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def show_saliency_maps(X, y, mask):
 mask = np.asarray(mask)
@@ -172,11 +172,12 @@ show_saliency_maps(X, y, mask)
 
 &lt;p&gt;结果如下:
 &lt;img src=&quot;../images/cnn_salicen_image_map.png&quot; alt=&quot;&quot; /&gt;
-颜色越亮表示对最终结果影响越大,可以看出鹌鹑的头部分，狗的头部和毛发，都对分类的最终影响很大&lt;/p&gt;
+颜色越亮表示对最终结果影响越大,可以看出鹌鹑的头部分，狗的头部和毛发，都对分类的最终影响很大。这恰恰也说明网络主要是使用这些部分来区分类别，而对于背景部分，网络并不关心，这与人类区分类别的原理很相似.&lt;/p&gt;
 
 &lt;h2 id=&quot;3-class-visualization卷积网络认为的物体是什么样的&quot;&gt;3. &lt;a href=&quot;https://arxiv.org/pdf/1312.6034.pdf&quot;&gt;Class visualization&lt;/a&gt;卷积网络认为的物体是什么样的&lt;/h2&gt;
-&lt;p&gt;我们知道输入一个图片后，在最后一层会给出分值，以此判断图片的分类。如果我们有一个图片，可以把某个分类的得分达到最高，就能观察到该网络所认为的理想的这个分类是什么样的,这是很有趣的尝试,而且能得出漂亮的结果.方法就是我们先随机初始化一个图片，然后与之前相反使用梯度增加的方法，让该图片最终可以最大化我们指定的一个分类,最终生成的图片就是我们要的结果，数学表示是:
-&lt;img src=&quot;../images/cnn_class_visible.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;我们知道输入一个图片后，在最后一层会给出分值，网络以此对图片进行分类。如果我们有一个图片，可以把某个分类的得分达到最高，就能观察到网络所认为的这个分类应该是什么样的,这是很有趣的尝试,而且能得出漂亮的结果.方法就是我们先随机初始化一个图片，然后与之前相反这次使用梯度增加的方法，让该图片最终可以最大化我们指定的一个分类,最终生成的图片就是我们要的结果，形式化公式如下:
+&lt;img src=&quot;../images/cnn_class_visible.png&quot; alt=&quot;&quot; /&gt;
+接下来我们看代码实现:&lt;/p&gt;
 &lt;h3 id=&quot;31-定义模糊函数使用高斯滤波随机初始化图片&quot;&gt;3.1 定义模糊函数,使用高斯滤波随机初始化图片:&lt;/h3&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from scipy.ndimage.filters import gaussian_filter1d
 def blur_image(X, sigma=1):
@@ -245,7 +246,7 @@ X = create_class_visualization(target_y, model)
 狼蛛，仍然是所有trainset中狼蛛图片的概念总和.&lt;/p&gt;
 
 &lt;h2 id=&quot;4-总结&quot;&gt;4. 总结&lt;/h2&gt;
-&lt;p&gt;还有一些方法，例如对输入图片进行部分遮挡以观察最后一层得分变化，fooling image，feature inversion等，都可以让我们进一步理解我们训练好的神经网络到底在做什么，具有什么性质；而且利用这些方法可以生成有趣的图片，比如deepDream,style transfer等。&lt;br /&gt;更重要的是这些方法告诉我们神经网络不是不可解释，不是神秘的,虽然现在还没有严格的数学证明，但是它的理论基础是完善的，或者说可控的.&lt;br /&gt;除此之外，理解这些中间层，对我们设计网络架构是非常有帮助的，我会在下一篇文章中进行阐述.&lt;/p&gt;
+&lt;p&gt;还有一些方法，例如对输入图片进行部分遮挡以观察最后一层得分变化，fooling image，feature inversion等，都可以让我们进一步理解我们训练好的神经网络到底在做什么，具有什么性质；而且利用这些方法可以生成有趣的图片，比如deepDream,style transfer等。&lt;br /&gt;更重要的是这些方法告诉我们神经网络不是不可解释，不是神秘的,虽然现在还没有严格的数学证明，但是它的理论基础是完善的，或者说可控的.&lt;br /&gt;除此之外，理解这些中间层，对我们设计网络架构是非常有帮助的.&lt;/p&gt;
 </content>
    </entry>
    

@@ -6,7 +6,7 @@ description: 神经网络工作原理探索
 ---
 
 ## 前言
-在上一篇[cnn卷积网络每一层是怎么工作的](https://andrewhuman.github.io/cnn-hidden-layout_search)中我们看了cnn每一层在找什么，除此之外还有几种方法可以帮助我们更好的理解网络，包括网络对图像的哪部分更敏感,你训练出来的网络所认为的人或者其他事物是什么样子的等。<br>本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以看[CS231N](http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf)和git上的代码实现
+在上一篇[cnn卷积网络每一层是怎么工作的](https://andrewhuman.github.io/cnn-hidden-layout_search)中我们看了cnn每一层在找什么，除此之外还有几种方法可以帮助我们更好的理解网络，包括网络对图像的哪部分更敏感,你训练出来的网络所认为的人或者其他事物是什么样子的等。<br>本文是在cs321n练习NetworkVisualization基础上的讲解,更多内容可以查看[CS231N](http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture12.pdf)和git上的代码实现
 ## 网络模型
 网络模型使用[SqueezeNet](https://arxiv.org/pdf/1602.07360.pdf),作者是UC Berkeley等人,它的架构如下图:
 ![squeezenet](../images/squeestnet_architect.png)
@@ -35,7 +35,7 @@ description: 神经网络工作原理探索
 
 具体的其他细节可以直接点击查看论文.
 ## 1. 准备工作
-### 1.1 首先导入需要lib
+### 1.1 首先导入需要的lib
 	from __future__ import print_function
 	import time, os, json
 	import numpy as np
@@ -105,7 +105,7 @@ description: 神经网络工作原理探索
     	saliency = sess.run(grads,feed_dict={model.labels:y,model.image:X})
 	return saliency
 
-运行计算:
+运行查看结果:
 
 	def show_saliency_maps(X, y, mask):
     mask = np.asarray(mask)
@@ -131,11 +131,12 @@ description: 神经网络工作原理探索
 
 结果如下:
 ![](../images/cnn_salicen_image_map.png)
-颜色越亮表示对最终结果影响越大,可以看出鹌鹑的头部分，狗的头部和毛发，都对分类的最终影响很大
+颜色越亮表示对最终结果影响越大,可以看出鹌鹑的头部分，狗的头部和毛发，都对分类的最终影响很大。这恰恰也说明网络主要是使用这些部分来区分类别，而对于背景部分，网络并不关心，这与人类区分类别的原理很相似.
 
 ## 3. [Class visualization](https://arxiv.org/pdf/1312.6034.pdf)卷积网络认为的物体是什么样的
-我们知道输入一个图片后，在最后一层会给出分值，以此判断图片的分类。如果我们有一个图片，可以把某个分类的得分达到最高，就能观察到该网络所认为的理想的这个分类是什么样的,这是很有趣的尝试,而且能得出漂亮的结果.方法就是我们先随机初始化一个图片，然后与之前相反使用梯度增加的方法，让该图片最终可以最大化我们指定的一个分类,最终生成的图片就是我们要的结果，数学表示是:
+我们知道输入一个图片后，在最后一层会给出分值，网络以此对图片进行分类。如果我们有一个图片，可以把某个分类的得分达到最高，就能观察到网络所认为的这个分类应该是什么样的,这是很有趣的尝试,而且能得出漂亮的结果.方法就是我们先随机初始化一个图片，然后与之前相反这次使用梯度增加的方法，让该图片最终可以最大化我们指定的一个分类,最终生成的图片就是我们要的结果，形式化公式如下:
 ![](../images/cnn_class_visible.png)
+接下来我们看代码实现:
 ### 3.1 定义模糊函数,使用高斯滤波随机初始化图片:
 	from scipy.ndimage.filters import gaussian_filter1d
 	def blur_image(X, sigma=1):
@@ -201,4 +202,4 @@ description: 神经网络工作原理探索
 狼蛛，仍然是所有trainset中狼蛛图片的概念总和.
 
 ## 4. 总结
-还有一些方法，例如对输入图片进行部分遮挡以观察最后一层得分变化，fooling image，feature inversion等，都可以让我们进一步理解我们训练好的神经网络到底在做什么，具有什么性质；而且利用这些方法可以生成有趣的图片，比如deepDream,style transfer等。<br>更重要的是这些方法告诉我们神经网络不是不可解释，不是神秘的,虽然现在还没有严格的数学证明，但是它的理论基础是完善的，或者说可控的.<br>除此之外，理解这些中间层，对我们设计网络架构是非常有帮助的，我会在下一篇文章中进行阐述.
+还有一些方法，例如对输入图片进行部分遮挡以观察最后一层得分变化，fooling image，feature inversion等，都可以让我们进一步理解我们训练好的神经网络到底在做什么，具有什么性质；而且利用这些方法可以生成有趣的图片，比如deepDream,style transfer等。<br>更重要的是这些方法告诉我们神经网络不是不可解释，不是神秘的,虽然现在还没有严格的数学证明，但是它的理论基础是完善的，或者说可控的.<br>除此之外，理解这些中间层，对我们设计网络架构是非常有帮助的.
