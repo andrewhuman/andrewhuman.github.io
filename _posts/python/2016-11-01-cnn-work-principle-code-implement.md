@@ -1,8 +1,8 @@
 ---
 published: true
 layout: post
-title: cnn卷积网络认为世界是什么样子的
-description: cnn卷积网络可视化与理解(二)
+title: cnn卷积网络可视化与理解(2)—cnn卷积网络认为世界是什么样子的
+description: 神经网络工作原理探索
 ---
 
 ## 前言

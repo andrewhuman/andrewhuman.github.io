@@ -42,8 +42,8 @@
   <div class="entry" style="position: relative;">
     <h1 class="entry-title"><a href="/cnn-hidden-layout_search" title="cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么">cnn卷积网络可视化与理解(1)—cnn网络每一层在找什么</a></h1>
 
-    <p class="entry-date">2016-04-01 
-        <span class="lastModified" style="display: none;" data-source="_posts/python/2016-04-01-cnn-hidden-layout_search.md">最后更新时间: 
+    <p class="entry-date">2016-11-01 
+        <span class="lastModified" style="display: none;" data-source="_posts/python/2016-11-01-cnn-hidden-layout_search.md">最后更新时间: 
         </span>
     </p>
 
@@ -56,11 +56,11 @@
 <p><img src="../images/cnn_first_layout_alexnet_2014.png" alt="AlexNet" />
 上图是ALexNet的第一层原生weight(96x55x55)的直接可视化，每一个单元格都代表了一个卷积核(55x55)，可以从上图中看出每一个卷积核都在寻找一个小的简单结构,包括不同角度的线，不同大小的圆和不同的色块等等.我们也可以直接把第二三四等层的卷积核如上图一样直接可视化,但是这些高层的原生weight或者filter是难以理解和解释的.</p>
 
-<p>既然原生的filter难以理解，我们必须用其他方法,Deconv approaches让不同的图片通过一个训练好的模型的卷积层，观察其变化,以此探索这些卷积层在寻找什么.它的原理如下：
+<p>既然原生的filter难以理解，我们必须绕道去观察,其中Deconv approaches让不同的图片通过一个训练好的模型的卷积层，观察其变化,以此探索这些卷积层在寻找什么.它的原理如下：
 <img src="../images/cnn_deconv_approach.png" alt="" />
-我们输入一张图片，让它通过网络直到我们想观察的那一层，然后把该层我们想观察的神经元的梯度置为1，其他神经元的梯度置为0，然后从该层开始反向传播，但是在反向传播的过程中有两种方法要做不同改变：</p>
-<h4 id="1-backword-deconvnet方法把反向传播中的所有梯度小于0全置为0如图红框中所示">1 backword deconvnet方法把反向传播中的所有梯度小于0，全置为0，如图红框中所示</h4>
-<h4 id="2-guided-backpropagatin方法除了把反向传播中梯度小于0的置为0外还把前向传播中小于0的单元也置为0">2 guided backpropagatin方法除了把反向传播中梯度小于0的置为0外，还把前向传播中小于0的单元也置为0</h4>
+我们输入一张图片，让它通过网络直到我们想观察的那一层，然后把该层我们想观察的神经元的梯度置为1，其他神经元的梯度置为0，从该层开始反向传播，但是在反向传播的要做出一点改变：</p>
+<h4 id="1-backword-deconvnet方法把反向传播中的所有梯度小于0的全置为0如图红框中所示">1 backword deconvnet方法把反向传播中的所有梯度小于0的，全置为0，如图红框中所示</h4>
+<h4 id="2-guided-backpropagatin方法除了把反向传播中梯度小于0的置为0外还把前向传播中小于0的单元也置为0事实上这种方法产生的效果要更好一点">2 guided backpropagatin方法除了把反向传播中梯度小于0的置为0外，还把前向传播中小于0的单元也置为0,事实上这种方法产生的效果要更好一点</h4>
 <p>这样做的原因是反向传播中负的部分会对我们想得到的图片产生消极影响，从而使图片难以理解，只保留正的部分可以使图片容易观察.</p>
 
 <p>下面的图片采用的是backword deconvnet方法得到的，可以看到也可以取得不错的效果.</p>
@@ -104,7 +104,7 @@
     <div class="myinfo"><center>
       <div id="avatarHolder" class="avatar circle" style="width: 0px; height: 0px; box-shadow: none; margin-bottom: 20px;"></div>
       <a href="/index.html" title="Homepage"><i class="icon-home icon-large"></i> Home</a>
-      <a href="http://www.linkedin.com/in/andrewhuman"><i class="icon-linkedin-sign icon-large"></i> Profile</a>
+      <a href=""><i class="icon-linkedin-sign icon-large"></i> Profile</a>
       <a href="https://github.com/andrewhuman"><i class="icon-github icon-large"></i> Code</a>
       <a href="mailto:huyouni174@gmail.com"><i class="icon-envelope icon-large"></i> Mail</a>
     </center></div>
