@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>cnn迁移学习详解与实践技巧 | Deep Learning Experience</title>
+  <meta name="renderer" content="webkit">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="/css/font-awesome/css/font-awesome.min.css" type="text/css" />
+  <link rel="stylesheet" href="/css/default.css" type="text/css" />
+  <link rel="stylesheet" href="/css/desktop.css" type="text/css" />
+  <link rel="stylesheet" href="/css/mobile.css" type="text/css" />
+  <link rel="shortcut icon" href="/css/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="/css/favicon.ico" mce_href="/favicon.ico" type="image/x-icon">
+  <link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/atom.xml" />
+  <script src="/js/jquery-1.11.0.min.js" type="text/javascript"></script>
+  <script src="/js/jquery-migrate-1.2.1.js" type="text/javascript"></script>
+  <script src="/js/jquery.transit.min.js" type="text/javascript"></script>
+  <script src="/js/common.js" type="text/javascript"></script>
+
+<body>
+  <link rel="stylesheet" href="/js/prettify/prettify.css" />
+<style type="text/css">
+  html {
+    background: #333333;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+  }
+  @media screen and (max-width: 750px){
+    body { background: rgba(255, 255, 255, 0.9); }
+  }
+</style>
+
+<div id="content" class="post" style="margin-top: 20px;">
+  <div id="avatar" class="avatar circle" data-in-right="false" style="width: 150px; height: 150px; position: fixed; top: 40px; z-index: 99; opacity: 0;">
+    <div class="center" style="margin-top: 4px; height: 142px; width: 142px; border-radius: 71px; background-image: url('../images/2.jpg');"></div>
+  </div>
+
+  <div class="entry" style="position: relative;">
+    <h1 class="entry-title"><a href="/transfer-learning-practice-technique" title="cnn迁移学习详解与实践技巧">cnn迁移学习详解与实践技巧</a></h1>
+
+    <p class="entry-date">2016-12-23 
+        <span class="lastModified" style="display: none;" data-source="_posts/python/2016-12-23-transfer-learning-practice-technique.md">最后更新时间: 
+        </span>
+    </p>
+
+
+    <h2 id="前言">前言</h2>
+<p>迁移学习是指我们从网络上下载训练好的模型也就是weight，然后部分的嵌入我们的网络，作为初始化weight或者在次基础上用我们自己的数据集进行微调。
+<br /><br />因为训练神经网络花费时间巨大有时甚至要数周， 因此在实际开发中，我们很少从头开始去训练网络，而在网络上已经有很多为不同任务使用大型数据集训练了数周的模型，这些模型均已经稳定收敛，已经达到了很高的精度。<br /><br />因此除非你的需求非常独特，否则大部分情况下你都可以使用迁移学习,在这些模型的基础上用自己的数据集进行训练，或者把这些模型部分的嵌入自己的网络，比如在分割或检测任务中，如果是用滑动窗口方法，那对于该窗口而言，仍然是一个分类任务，可以迁移你想要的分类模型，当然现在的分割和检测已经不直接使用滑动窗口，但是只要你网络中的部分任务是前人做过，你都可以使用迁移学习的方法把weight嵌入你的网络作为初始化或者微调。</p>
+
+<h2 id="1-微调技巧">1. 微调技巧</h2>
+<p>在开发中针对不同的情况，对模型的微调要采用不同的方法,否则反而会得出较差的结果或者要花费更长的时间训练.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th style="text-align: center">数据集很相似</th>
+      <th style="text-align: right">数据集不相似</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>数据很少(10000左右)</td>
+      <td style="text-align: center">只训练分类层</td>
+      <td style="text-align: right">尝试从不同层训练分类</td>
+    </tr>
+    <tr>
+      <td>数据不算少也不多</td>
+      <td style="text-align: center">微调最后几层</td>
+      <td style="text-align: right">微调最后多层</td>
+    </tr>
+    <tr>
+      <td>大量数据，几百万</td>
+      <td style="text-align: center">把模型参数当初始化训练</td>
+      <td style="text-align: right">把模型参数当初始化训练</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>如上表所示，对于我们能拥有的数据集大小和任务相似性，要分不同情况处理：<br />
+<img src="../images/cnn_transfer_learning_freeze_layers.png" alt="" /></p>
+<h3 id="1-similar-and-small-dataset">1. similar and small dataset</h3>
+<p>数据集很相似数据很少，比如我们下载的是在ImageNet上训练好的inceptionV4 1000分类模型，而我们想做的是对20种猫进行分类，我们可以直接使用该模型除了分类之前的所有权重，并在此基础上训练20种分类，如上图2.SmallDataSet所示.<br />有一点要注意的是，对于冻结层的处理，有两种方法:</p>
+<h4 id="a-每次训练让image从头输入网络但是不训练冻结层的权重">a. 每次训练让image从头输入网络，但是不训练冻结层的权重.</h4>
+<h4 id="b让image输入网络直到冻结层结束也就是图片最后一层fc-4096输出feature这里是4096维的feature存储在本地然后训练的时候把feature当作输入后面接我们的分类层这样做可以大大提高训练速度所以一般采用该方法后面的代码演示也是使用该方法">b.让image输入网络，直到冻结层结束，也就是图片最后一层FC-4096,输出feature这里是4096维的feature，存储在本地。然后训练的时候把feature当作输入,后面接我们的分类层。这样做可以大大提高训练速度，所以一般采用该方法，后面的代码演示也是使用该方法。</h4>
+<h3 id="2-similar-and-many-dataset">2. similar and many dataset</h3>
+<p>数据集很相似数据不算少也不多,这里的不多是指相对于我们下载的模型的训练集而言，比如我们拥有数十万的训练集，此时可以对网络最后几层进行训练，具体几层取决于我们拥有的数据集。<br /><br /><strong>也有一点要注意的是，进行微调的时候最好把最后层的学习率设为此模型正常训练时学习率的1/10，中间微调层的学习率设为1/100，或者先微调最后分类层，等模型收敛后，在把最后几层加入微调.</strong></p>
+<h3 id="3-similar-and-a-lot-of-dataset">3. similar and a lot of dataset</h3>
+<p>数据集很相似同时拥有大量数据，此时可以直接把模型参数当初权重初始化对所有参数进行训练，当然也有注意学习率要设为之前的1/10或1/100或更低.</p>
+<h3 id="4-diffrenet-dataset">4. diffrenet dataset</h3>
+<p>对数据集不相似的情况，在数据很少时训练效果不会特别好，但是依然可以按照表中的方法进行微调.</p>
+<h3 id="5代码">5.代码</h3>
+<p>最后贴一个image直接输入网络，但只对模型部分参数进行训练的代码：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>optimizer = tf.train.AdagradOptimzer(0.01)
+#获取你需要训练的域下的变量
+first_train_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                 "scope/prefix/for/first/vars")
+#最小化cost，只训练first_train_vars
+first_train_op = optimizer.minimize(cost, var_list=first_train_vars)
+
+second_train_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                  "scope/prefix/for/second/vars")                     
+second_train_op = optimizer.minimize(cost, var_list=second_train_vars)
+</code></pre></div></div>
+
+<h2 id="2迁移学习代码实现">2.迁移学习代码实现</h2>
+<p>演示使用VGG16分类模型，你也可以下载inceptionV3 V4模型取得更好的结果，流程都是一样的</p>
+
+<h3 id="1下载vgg16数据">1.下载VGG16数据</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from urllib.request import urlretrieve
+from os.path import isfile,isdir
+from tqdm import tqdm
+
+#设置本地存储目录
+vgg_dir = 'tensorflow_vgg/'
+if not isdir(vgg_dir):
+	raise Exception("VGG directory doesn't exist!")
+
+#使用tqdm显示下载进度
+class DLProgress(tqdm):
+	last_block = 0
+	def hook(self,block_num =1,block_size=1,total_size=None):
+    	self.total = total_size
+    	self.update((block_num - self.last_block) * block_size)
+    	self.last_block = block_num
+#如果文件不存在就下载，如果存在就跳过
+if not isfile(vgg_dir + "vgg16.npy"):
+	#使用urlretrieve下载模型数据,vgg全部参数大概500多M,所以也可以手动下载，然后放到tensorflow_vgg文件夹里
+	with DLProgress(unit='B', unit_scale=True, miniters=1, desc='VGG16 Parameters') as pbar:
+    	urlretrieve('https://s3.amazonaws.com/content.udacity-data.com/nd101/vgg16.npy',vgg_dir + 'vgg16.npy',pbar.hook)
+else :
+   		print("Parameter file already exists!")
+</code></pre></div></div>
+
+<h3 id="2-下载flower数据">2. 下载flower数据</h3>
+<p>演示使用google的flower数据，与上面下载逻辑基本一致</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#tarfile解压缩
+import tarfile
+
+dataset_folder_path = 'flower_photos'
+
+class DLProgress(tqdm):
+	last_block = 0
+
+	def hook(self, block_num=1, block_size=1, total_size=None):
+    	self.total = total_size
+    	self.update((block_num - self.last_block) * block_size)
+    	self.last_block = block_num
+
+if not isfile('flower_photos.tar.gz'):
+	with DLProgress(unit='B', unit_scale=True, miniters=1, desc='Flowers Dataset') as pbar:
+    	urlretrieve(
+        	'http://download.tensorflow.org/example_images/flower_photos.tgz',
+        	'flower_photos.tar.gz',
+        	pbar.hook)
+#解压缩
+if not isdir(dataset_folder_path):
+	with tarfile.open('flower_photos.tar.gz') as tar:
+    	tar.extractall()
+    	tar.close()
+</code></pre></div></div>
+
+<h3 id="3-图片通过冻结层输出feature">3. 图片通过冻结层，输出feature</h3>
+
+<h4 id="a-导如需要包">a. 导如需要包</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import os
+import numpy as np
+import tensorflow as tf
+from tensorflow_vgg import vgg16
+from tensorflow_vgg import utils
+</code></pre></div></div>
+
+<h4 id="b-获取图片分类">b. 获取图片分类</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#获取图片路径
+data_dir = 'flower_photos/'
+#获取图片分类
+contents = os.listdir(data_dir)
+print('contents contain {}'.format(contents))
+#再次获取图片分类，去掉不是文件夹的路径
+classes = [each for each in contents if isdir(data_dir+each)]
+print('classes = {}'.format(classes))
+#classes = ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
+</code></pre></div></div>
+
+<h4 id="c-处理图片获取分类层之前的feature">c. 处理图片,获取分类层之前的feature</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>batch_size = 10
+codes_list = []
+labels = []
+batch = []
+codes = None
+
+#重置计算图,防止重复加载
+tf.reset_default_graph()
+with tf.Session() as sess:
+    feed_images = tf.placeholder(dtype=tf.float32,shape=[None,224,224,3],name='feed_image')
+    
+    #加载vgg16模型,bulid运算图
+    vgg = vgg16.Vgg16()
+    with tf.name_scope('content_vgg'):
+        vgg.build(feed_images)
+        
+    #递归分类
+    for each in classes :
+        print("Starting {} images".format(each))
+        class_path = data_dir + each
+        files = os.listdir(class_path)
+        
+        #递归一个分类中的所有图片
+        for ii ,file in enumerate(files,1):
+            #加载图片，中心裁剪，并shape成224x224x3
+            img = utils.load_image(os.path.join(class_path,file))
+            #把图片和对应分类组成列表
+            batch.append(img.reshape((1, 224, 224, 3)))
+            labels.append(each)
+            
+            if ii % batch_size == 0 or ii == len(files):
+                images = np.concatenate(batch)
+                
+                #输入是images，输出是运行到relu6层的结果
+                codes_batch = sess.run(vgg.relu6,feed_dict={feed_images:images})
+                
+                #把结果拼接为codes
+                if codes is None :
+                    codes = codes_batch
+                else:
+                    codes = np.concatenate((codes,codes_batch))
+                    
+                #重置batch
+                batch = []
+                print('{} images processed'.format(ii))
+</code></pre></div></div>
+
+<h4 id="d-保存features">d. 保存features</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># write codes to file
+with open('codes','w') as f:
+    codes.tofile(f)
+
+# write labels to file
+import csv
+with open('labels','w') as f:
+    writer = csv.writer(f,delimiter='\n')
+    writer.writerow(labels)	
+</code></pre></div></div>
+
+<p>运行结果是：codes是一个[3670,4096]数组,3670表示图片数量，4096是特征维度，labels是[3670,5],5表示总共分5类</p>
+
+<h3 id="4-建立分类器进行训练">4 建立分类器进行训练</h3>
+<h4 id="a加载codes和lables上面图片只处理一次以后都直接从硬盘加载">a.加载codes和lables，上面图片只处理一次，以后都直接从硬盘加载</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># read codes and labels from file
+import csv
+with open('labels') as f:
+    reader = csv.reader(f,delimiter='\n')
+    labels = np.array([each for each in reader if len(each) &gt; 0]).squeeze()
+
+with open('codes') as f:
+    codes = np.fromfile(f,dtype=np.float32)
+    codes = codes.reshape((len(labels),-1))
+</code></pre></div></div>
+
+<p>b.对lables进行onehot编码：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#use LabelBinarizer to create one-hot encoded vectors from the labels.
+from sklearn.preprocessing import LabelBinarizer
+
+lb = LabelBinarizer()
+lb.fit(labels)
+labels_vecs = lb.transform(labels) c.随机打乱数据集次序，并分成train val test集合:
+
+#shuffle our data so the validation and test sets contain data from all classes
+
+from sklearn.model_selection import StratifiedShuffleSplit
+ss = StratifiedShuffleSplit(n_splits=1,test_size=0.2)
+train_idx, val_idx = next(ss.split(codes,labels))
+
+half_val_len = int(len(val_idx)/2)
+val_idx ,test_idx = val_idx[:half_val_len],val_idx[half_val_len:]
+
+train_x, train_y = codes[train_idx],labels_vecs[train_idx]
+val_x, val_y = codes[val_idx],labels_vecs[val_idx]
+test_x, test_y = codes[test_idx],labels_vecs[test_idx]
+
+#Train shapes (x, y): (2936, 4096) (2936, 5)
+#Validation shapes (x, y): (367, 4096) (367, 5)
+#Test shapes (x, y): (367, 4096) (367, 5)
+</code></pre></div></div>
+
+<p>d.构建分类层，logits，损失函数，预测准确率:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#build the classifier layers
+
+#placeholder input and labels 
+inputs_ = tf.placeholder(dtype=tf.float32,shape=[None, codes.shape[1]],name='inputs_place')
+labels_ = tf.placeholder(dtype=tf.float32,shape=[None,labels_vecs.shape[1]],name='lables_place')
+
+# fully_connected  and cost
+fc = tf.contrib.layers.fully_connected(inputs_,256)
+logits = tf.contrib.layers.fully_connected(fc,num_outputs=labels_vecs.shape[1],activation_fn=None)
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=labels_,logits=logits)
+cost = tf.reduce_mean(cross_entropy)
+
+#adam optimizer to minimize cost
+optimizer = tf.train.AdamOptimizer().minimize(cost)
+
+#预测准确率
+predicted = tf.nn.softmax(logits)
+correct_pred = tf.equal(tf.arg_max(predicted,1),tf.arg_max(labels_,1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred,tf.float32))
+</code></pre></div></div>
+
+<p>e.把训练集分成批量进行训练:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#get batch 
+def get_batches(x, y, n_batches=10):
+    batch_size = len(x) // n_batches
+    
+    for ii in range(0,n_batches * batch_size ,batch_size):
+        if ii != (n_batches-1) * batch_size:
+            X,Y = x[ii: ii+batch_size],y[ii: ii+batch_size]
+        else :
+            X,Y = x[ii:],y[ii:]
+    
+        yield X,Y f.训练并保存模型:
+
+epochs = 10
+iteration = 0
+saver = tf.train.Saver()
+with tf.Session() as sess:
+    
+    sess.run(tf.global_variables_initializer())
+    for e in range(epochs):
+        for x ,y in get_batches(train_x,train_y) :
+            
+        
+            loss, _ = sess.run([cost,optimizer],feed_dict={inputs_:x,labels_ : y})
+            print("Epoch: {}/{}".format(e+1, epochs),
+                      "Iteration: {}".format(iteration),
+                      "Training loss: {:.5f}".format(loss))
+            iteration += 1
+        
+            if iteration % 5 ==0:
+                feed = {inputs_: val_x,labels_: val_y}
+                val_acc = sess.run(accuracy,feed_dict=feed)
+                print("Epoch: {}/{}".format(e, epochs),
+                          "Iteration: {}".format(iteration),
+                          "Validation Acc: {:.4f}".format(val_acc))
+    saver.save(sess,"checkpoints/flowers.ckpt")
+</code></pre></div></div>
+
+<p>结果：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Epoch: 9/10 Iteration: 85 Training loss: 0.01775
+Epoch: 9/10 Iteration: 86 Training loss: 0.03539
+Epoch: 9/10 Iteration: 87 Training loss: 0.02733
+Epoch: 9/10 Iteration: 88 Training loss: 0.01915
+Epoch: 9/10 Iteration: 89 Training loss: 0.02459
+Epoch: 8/10 Iteration: 90 Validation Acc: 0.8610
+Epoch: 10/10 Iteration: 90 Training loss: 0.01595
+Epoch: 10/10 Iteration: 91 Training loss: 0.02532
+Epoch: 10/10 Iteration: 92 Training loss: 0.01329
+Epoch: 10/10 Iteration: 93 Training loss: 0.02923
+Epoch: 10/10 Iteration: 94 Training loss: 0.02558
+Epoch: 9/10 Iteration: 95 Validation Acc: 0.8638
+Epoch: 10/10 Iteration: 95 Training loss: 0.01392
+Epoch: 10/10 Iteration: 96 Training loss: 0.02822
+Epoch: 10/10 Iteration: 97 Training loss: 0.02173
+Epoch: 10/10 Iteration: 98 Training loss: 0.01468
+Epoch: 10/10 Iteration: 99 Training loss: 0.01980
+Epoch: 9/10 Iteration: 100 Validation Acc: 0.8610
+</code></pre></div></div>
+
+<p>这是只训练了10次的结果，loss并没有降到很低，如果继续训练，并使用数据增强，应该能取得更好效果，从这里可以看出使用迁移学习可以很轻松的获得一个相应的高准确率的结果,这种方法还是强大的.</p>
+
+<h3 id="5-测试">5. 测试</h3>
+<h4 id="a使用测试集测试">a.使用测试集测试:</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#Testing
+with tf.Session() as sess:
+    saver.restore(sess,tf.train.latest_checkpoint('checkpoints'))
+    feed = {inputs_: test_x,
+            labels_: test_y}
+    test_acc = sess.run(accuracy, feed_dict=feed)
+    print("Test accuracy: {:.4f}".format(test_acc))
+</code></pre></div></div>
+
+<p>运行结果:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Test accuracy: 0.8719
+</code></pre></div></div>
+
+<h4 id="b使用训练的新模型对一朵花进行实际预测">b.使用训练的新模型，对一朵花进行实际预测:</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>%matplotlib inline
+
+import matplotlib.pyplot as plt
+from scipy.ndimage import imread
+
+test_img_path = 'flower_photos/roses/10894627425_ec76bbc757_n.jpg'
+test_img = imread(test_img_path)
+plt.imshow(test_img)
+
+# Run this cell if you don't have a vgg graph built
+with tf.Session() as sess:
+    input_ = tf.placeholder(tf.float32, [None, 224, 224, 3])
+    vgg = vgg16.Vgg16()
+    vgg.build(input_)
+
+with tf.Session() as sess:
+    img = utils.load_image(test_img_path)
+    img = img.reshape((1, 224, 224, 3))
+
+    feed_dict = {input_: img}
+    code = sess.run(vgg.relu6, feed_dict=feed_dict)
+        
+saver = tf.train.Saver()
+with tf.Session() as sess:
+    saver.restore(sess, tf.train.latest_checkpoint('checkpoints'))
+    
+    feed = {inputs_: code}
+    prediction = sess.run(predicted, feed_dict=feed).squeeze()
+
+plt.imshow(test_img)
+
+plt.barh(np.arange(5), prediction)
+_ = plt.yticks(np.arange(5), lb.classes_)
+</code></pre></div></div>
+
+<p>运行结果：
+<img src="../images/cnn_transfer_learning_flower1.png" alt="" />
+<img src="../images/cnn_transfer_learning_flower1_predict_result.png" alt="" />
+很棒！我们成功的预测了图片里花为玫瑰.</p>
+
+<h2 id="3-总结">3. 总结</h2>
+<p>使用迁移学习可以很容易的得出我们想要的模型，但是里面的坑还是很多的，最重要的还是要记住，微调时学习率一定要比正常的小，因为你是在一个已经收敛的模型上进行训练的.</p>
+
+
+
+
+  </div>
+
+
+  <div id="menuIndex" class="sidenav">
+    <div class="myinfo"><center>
+      <div id="avatarHolder" class="avatar circle" style="width: 0px; height: 0px; box-shadow: none; margin-bottom: 20px;"></div>
+      <a href="/index.html" title="Homepage"><i class="icon-home icon-large"></i> Home</a>
+      <a href=""><i class="icon-linkedin-sign icon-large"></i> Profile</a>
+      <a href="https://github.com/andrewhuman"><i class="icon-github icon-large"></i> Code</a>
+      <a href="mailto:huyouni174@gmail.com"><i class="icon-envelope icon-large"></i> Mail</a>
+    </center></div>
+    <div id="menu"></div>
+  </div>
+</div>
+
+<script src="/js/post.js" type="text/javascript"></script>
+
+</body>
+</html>
