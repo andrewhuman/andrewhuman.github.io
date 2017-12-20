@@ -26,7 +26,7 @@
    <title>Deep Learning Experience</title>
    <link href="http://localhost:3000/atom.xml" rel="self" type="application/atom+xml"/>
    <link href="http://localhost:3000" rel="alternate" type="text/html" />
-   <updated>2017-12-19T21:31:13+08:00</updated>
+   <updated>2017-12-20T19:02:38+08:00</updated>
    <id>http://localhost:3000</id>
    <author>
      <name></name>
@@ -40,11 +40,11 @@
      <updated>2016-12-23T00:00:00+08:00</updated>
      <id>/transfer-learning-practice-technique</id>
      <content type="html">&lt;h2 id=&quot;前言&quot;&gt;前言&lt;/h2&gt;
-&lt;p&gt;迁移学习是指我们从网络上下载训练好的模型也就是weight，然后部分的嵌入我们的网络，作为初始化weight或者在次基础上用我们自己的数据集进行微调。
-&lt;br /&gt;&lt;br /&gt;因为训练神经网络花费时间巨大有时甚至要数周， 因此在实际开发中，我们很少从头开始去训练网络，而在网络上已经有很多为不同任务使用大型数据集训练了数周的模型，这些模型均已经稳定收敛，已经达到了很高的精度。&lt;br /&gt;&lt;br /&gt;因此除非你的需求非常独特，否则大部分情况下你都可以使用迁移学习,在这些模型的基础上用自己的数据集进行训练，或者把这些模型部分的嵌入自己的网络，比如在分割或检测任务中，如果是用滑动窗口方法，那对于该窗口而言，仍然是一个分类任务，可以迁移你想要的分类模型，当然现在的分割和检测已经不直接使用滑动窗口，但是只要你网络中的部分任务是前人做过，你都可以使用迁移学习的方法把weight嵌入你的网络作为初始化或者微调。&lt;/p&gt;
+&lt;p&gt;迁移学习是指我们从网络上下载训练好的模型也就是weight，然后部分的嵌入我们的网络，作为初始化weight或者在此基础上用我们自己的数据集进行微调。
+&lt;br /&gt;&lt;br /&gt;因为训练神经网络花费时间巨大有时甚至要数周， 因此在实际开发中，我们很少从头开始去训练网络，而在网络上已经有很多为不同任务使用大型数据集训练了数周的模型，这些模型均已经稳定收敛，达到了很高的精度。&lt;br /&gt;&lt;br /&gt;因此除非你的需求非常独特，否则大部分情况下你都可以使用迁移学习,在这些模型的基础上用自己的数据集进行训练，或者把这些模型部分的嵌入自己的网络，比如在分割或检测任务中，如果是用滑动窗口方法，那对于该窗口而言，仍然是一个分类任务，可以迁移你想要的分类模型，当然现在的分割和检测已经不直接使用滑动窗口，但是只要你网络中的部分任务是前人做过，你都可以使用迁移学习的方法把weight嵌入你的网络作为初始化或者微调。&lt;/p&gt;
 
 &lt;h2 id=&quot;1-微调技巧&quot;&gt;1. 微调技巧&lt;/h2&gt;
-&lt;p&gt;在开发中针对不同的情况，对模型的微调要采用不同的方法,否则反而会得出较差的结果或者要花费更长的时间训练.&lt;/p&gt;
+&lt;p&gt;在开发中针对不同的情况，对模型的微调要采用不同的方法,否则反而会得出较差的结果或者要花费更长的时间训练.大概情况有这么几种:&lt;/p&gt;
 
 &lt;table&gt;
   &lt;thead&gt;
@@ -76,15 +76,15 @@
 &lt;p&gt;如上表所示，对于我们能拥有的数据集大小和任务相似性，要分不同情况处理：&lt;br /&gt;
 &lt;img src=&quot;../images/cnn_transfer_learning_freeze_layers.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 &lt;h3 id=&quot;1-similar-and-small-dataset&quot;&gt;1. similar and small dataset&lt;/h3&gt;
-&lt;p&gt;数据集很相似数据很少，比如我们下载的是在ImageNet上训练好的inceptionV4 1000分类模型，而我们想做的是对20种猫进行分类，我们可以直接使用该模型除了分类之前的所有权重，并在此基础上训练20种分类，如上图2.SmallDataSet所示.&lt;br /&gt;有一点要注意的是，对于冻结层的处理，有两种方法:&lt;/p&gt;
+&lt;p&gt;数据集很相似数据很少，比如我们下载的是在ImageNet上训练好的inceptionV4 1000分类模型，而我们想做的是对20种猫进行分类，我们可以直接使用该模型不包含分类层的所有权重，并在此基础上训练20种分类，如上图2.SmallDataSet所示.&lt;br /&gt;有一点要注意的是，对于冻结层的处理，有两种方法:&lt;/p&gt;
 &lt;h4 id=&quot;a-每次训练让image从头输入网络但是不训练冻结层的权重&quot;&gt;a. 每次训练让image从头输入网络，但是不训练冻结层的权重.&lt;/h4&gt;
 &lt;h4 id=&quot;b让image输入网络直到冻结层结束也就是图片最后一层fc-4096输出feature这里是4096维的feature存储在本地然后训练的时候把feature当作输入后面接我们的分类层这样做可以大大提高训练速度所以一般采用该方法后面的代码演示也是使用该方法&quot;&gt;b.让image输入网络，直到冻结层结束，也就是图片最后一层FC-4096,输出feature这里是4096维的feature，存储在本地。然后训练的时候把feature当作输入,后面接我们的分类层。这样做可以大大提高训练速度，所以一般采用该方法，后面的代码演示也是使用该方法。&lt;/h4&gt;
 &lt;h3 id=&quot;2-similar-and-many-dataset&quot;&gt;2. similar and many dataset&lt;/h3&gt;
 &lt;p&gt;数据集很相似数据不算少也不多,这里的不多是指相对于我们下载的模型的训练集而言，比如我们拥有数十万的训练集，此时可以对网络最后几层进行训练，具体几层取决于我们拥有的数据集。&lt;br /&gt;&lt;br /&gt;&lt;strong&gt;也有一点要注意的是，进行微调的时候最好把最后层的学习率设为此模型正常训练时学习率的1/10，中间微调层的学习率设为1/100，或者先微调最后分类层，等模型收敛后，在把最后几层加入微调.&lt;/strong&gt;&lt;/p&gt;
 &lt;h3 id=&quot;3-similar-and-a-lot-of-dataset&quot;&gt;3. similar and a lot of dataset&lt;/h3&gt;
-&lt;p&gt;数据集很相似同时拥有大量数据，此时可以直接把模型参数当初权重初始化对所有参数进行训练，当然也有注意学习率要设为之前的1/10或1/100或更低.&lt;/p&gt;
+&lt;p&gt;数据集很相似同时拥有大量数据，此时可以直接把模型参数当做权重初始化对所有参数进行训练，当然也要注意学习率要设为之前的1/10或1/100或更低.&lt;/p&gt;
 &lt;h3 id=&quot;4-diffrenet-dataset&quot;&gt;4. diffrenet dataset&lt;/h3&gt;
-&lt;p&gt;对数据集不相似的情况，在数据很少时训练效果不会特别好，但是依然可以按照表中的方法进行微调.&lt;/p&gt;
+&lt;p&gt;对数据集不相似的情况，在数据很少时训练效果不会特别好，但是依然可以按照表中的方法进行微调尝试.&lt;/p&gt;
 &lt;h3 id=&quot;5代码&quot;&gt;5.代码&lt;/h3&gt;
 &lt;p&gt;最后贴一个image直接输入网络，但只对模型部分参数进行训练的代码：&lt;/p&gt;
 
