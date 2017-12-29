@@ -26,7 +26,7 @@
    <title>Deep Learning Experience</title>
    <link href="http://localhost:3000/atom.xml" rel="self" type="application/atom+xml"/>
    <link href="http://localhost:3000" rel="alternate" type="text/html" />
-   <updated>2017-12-22T19:13:16+08:00</updated>
+   <updated>2017-12-25T21:34:29+08:00</updated>
    <id>http://localhost:3000</id>
    <author>
      <name></name>
@@ -35,10 +35,33 @@
 
    
    <entry>
-     <title>lstm原理详解与代码实现(numpy)</title>
+     <title>lstm内部原理详解与代码实现(numpy)</title>
      <link href="/rnn-lstm-principle-code-implement"/>
      <updated>2016-10-07T00:00:00+08:00</updated>
      <id>/rnn-lstm-principle-code-implement</id>
+     <content type="html">&lt;h2 id=&quot;前言&quot;&gt;前言&lt;/h2&gt;
+&lt;p&gt;lstm全名Long Short Term Memory，即长短记忆网络，它是对平凡rnn模型的一种改进，可在一定程度上避免平凡rnn模型层数过高时网络的梯度弥散问题,并有更好的拟合效果.在tensorflow或其他框架中，lstm都是封装好的，只对外暴露输入输出等，不过如果你想弄明白网络发生了什么，以及为什么这么设计，还是有必要把封装撕开，看一看内部的实现的.以下大部分图片都摘自&lt;a href=&quot;http://cs231n.stanford.edu/slides/2016/winter1516_lecture10.pdf&quot;&gt;CS231N课程&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&quot;警告&quot;&gt;警告&lt;/h2&gt;
+&lt;p&gt;在开始之前，我们先看一张图，但是放在这里是建议大家不要看这张图及类似的变种:
+&lt;img src=&quot;../images/rnn_lstm_pipe_donot_look.png&quot; alt=&quot;&quot; /&gt;
+这张图也是LSTM的流程图，网络上也有很多这种弯弯曲曲的图片的变种，如果你是刚开始接触LSTM并且仔细看了，我只能说不知道你看没看懂反正我到现在也没看太懂,而且第一次看浪费了2个小时……，因为它画的实在有点复杂了.&lt;/p&gt;
+&lt;h2 id=&quot;1-lstm原理&quot;&gt;1. LSTM原理&lt;/h2&gt;
+&lt;h3 id=&quot;11-rnn和lstm比较&quot;&gt;1.1 RNN和LSTM比较&lt;/h3&gt;
+&lt;p&gt;平凡rnn和lstm的结构如下图：
+&lt;img src=&quot;../images/rnn_lstm_simple_bijiao.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;h4 id=&quot;-平凡rnn的计算公式&quot;&gt;. 平凡RNN的计算公式:&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&quot;../images/rnn_simple_rnn_alghrithem.png&quot; alt=&quot;&quot; /&gt;
+如果设
+$ h_\t $&lt;/p&gt;
+
+</content>
+   </entry>
+   
+   <entry>
+     <title>快速卷积算法im2col详解</title>
+     <link href="/cnn-img2col-algorithm-principle"/>
+     <updated>2016-10-07T00:00:00+08:00</updated>
+     <id>/cnn-img2col-algorithm-principle</id>
      <content type="html">
 </content>
    </entry>

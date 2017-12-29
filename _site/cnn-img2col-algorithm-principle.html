@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>lstm内部原理详解与代码实现(numpy) | Deep Learning Experience</title>
+  <title>快速卷积算法im2col详解 | Deep Learning Experience</title>
   <meta name="renderer" content="webkit">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,29 +40,15 @@
   </div>
 
   <div class="entry" style="position: relative;">
-    <h1 class="entry-title"><a href="/rnn-lstm-principle-code-implement" title="lstm内部原理详解与代码实现(numpy)">lstm内部原理详解与代码实现(numpy)</a></h1>
+    <h1 class="entry-title"><a href="/cnn-img2col-algorithm-principle" title="快速卷积算法im2col详解">快速卷积算法im2col详解</a></h1>
 
     <p class="entry-date">2016-10-07 
-        <span class="lastModified" style="display: none;" data-source="_posts/python/2016-10-7-rnn-lstm-principle-code-implement.md">最后更新时间: 
+        <span class="lastModified" style="display: none;" data-source="_posts/python/2016-10-7-cnn-img2col-algorithm-principle.md">最后更新时间: 
         </span>
     </p>
 
 
-    <h2 id="前言">前言</h2>
-<p>lstm全名Long Short Term Memory，即长短记忆网络，它是对平凡rnn模型的一种改进，可在一定程度上避免平凡rnn模型层数过高时网络的梯度弥散问题,并有更好的拟合效果.在tensorflow或其他框架中，lstm都是封装好的，只对外暴露输入输出等，不过如果你想弄明白网络发生了什么，以及为什么这么设计，还是有必要把封装撕开，看一看内部的实现的.以下大部分图片都摘自<a href="http://cs231n.stanford.edu/slides/2016/winter1516_lecture10.pdf">CS231N课程</a>.</p>
-<h2 id="警告">警告</h2>
-<p>在开始之前，我们先看一张图，但是放在这里是建议大家不要看这张图及类似的变种:
-<img src="../images/rnn_lstm_pipe_donot_look.png" alt="" />
-这张图也是LSTM的流程图，网络上也有很多这种弯弯曲曲的图片的变种，如果你是刚开始接触LSTM并且仔细看了，我只能说不知道你看没看懂反正我到现在也没看太懂,而且第一次看浪费了2个小时……，因为它画的实在有点复杂了.</p>
-<h2 id="1-lstm原理">1. LSTM原理</h2>
-<h3 id="11-rnn和lstm比较">1.1 RNN和LSTM比较</h3>
-<p>平凡rnn和lstm的结构如下图：
-<img src="../images/rnn_lstm_simple_bijiao.png" alt="" /></p>
-<h4 id="-平凡rnn的计算公式">. 平凡RNN的计算公式:</h4>
-<p><img src="../images/rnn_simple_rnn_alghrithem.png" alt="" />
-如果设
-$ h_\t $</p>
-
+    
 
 
 
